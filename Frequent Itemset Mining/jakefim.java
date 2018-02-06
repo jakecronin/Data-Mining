@@ -4,7 +4,7 @@ import java.util.*;
 
 public class jakefim{
 
-	static LinkedList<ArrayList<Item>> data;	//Transactions<Items Per Transaction>
+	static LinkedList<LinkedList<Item>> data;	//Transactions<Items Per Transaction>
 
 	static ArrayList<HashMap<Item, Integer>> frequency;	//records frequency of each item
 	static ArrayList<HashSet<Item>> frequents;	//holds all frequent items
@@ -45,6 +45,7 @@ public class jakefim{
 		while (data.isEmpty() == false){
 			countNextSize();
 		}
+		System.out.println("going to write data. time elapsed: "+(System.currentTimeMillis()-start));
 
 		String tofile = args[2];
 		writeData(tofile);
@@ -67,7 +68,7 @@ public class jakefim{
 		HashSet<Item> frequent = new HashSet<Item>();
 		//Throw each 'item' into freqnecy hashmap
 		int c = 0;
-		for (ArrayList<Item> transaction: data){
+		for (LinkedList<Item> transaction: data){
 			//System.out.println(times.size()+": "+c+"/"+linecount);
 			c++;
 			for (Item item: transaction){
@@ -101,18 +102,21 @@ public class jakefim{
 		int size = data.size();
 		for (int p = 0; p < size; p++){
 			//System.out.println(times.size()+": "+p+"/"+linecount);
-			ArrayList<Item> transaction = data.removeFirst();	//single items in transaction
-			ArrayList<Item> doubleTransaction = new ArrayList<Item>();	//will replace transaction
+			LinkedList<Item> transaction = data.pollFirst();	//single items in transaction
+			LinkedList<Item> doubleTransaction = new LinkedList<Item>();	//will replace transaction
 
 			//get every combo of sub-transactions and build set of 2-sized ones
-			for (int i = 0; i < transaction.size() - 1; i++) {	//item A
-				Item a = transaction.get(i);
+			while(transaction.size() > 1){
+				Item a = transaction.pollFirst();
 				if (frequentSingles.contains(a) == false){	//skip if a is not a frequent item
 					continue;
 				}
-				for (int j = i + 1; j < transaction.size(); j++){
-					Item b = transaction.get(j);
+				//run through the rest of the items with an interator
+				Iterator<Item> it = transaction.iterator();
+				while(it.hasNext()){
+					Item b = it.next();
 					if (frequentSingles.contains(b) == false){	//skip if b is not a frequent item
+						it.remove();	//remove item from transaction if it isn't frequent
 						continue;
 					}
 					Item n = a.combine(b);
@@ -147,7 +151,6 @@ public class jakefim{
 	}
 
 	static void countNextSize(){
-		//System.out.println("In count next size");
 		long startTime = System.currentTimeMillis();
 
 		HashMap<Item, Integer> superCounts = new HashMap<Item, Integer>();	//save count of supersets
@@ -157,38 +160,32 @@ public class jakefim{
 
 		linecount = data.size();
 		for (int p = 0; p < linecount; p++){	//run through each transaction
-			//System.out.println(times.size()+": "+p+"/"+linecount);
-			ArrayList<Item> transaction = data.removeFirst();	//subsets in transaction
+			LinkedList<Item> transaction = data.removeFirst();	//subsets in transaction
 
-			// System.out.println("Looking at transaction: ");
-			// for (Item m: transaction){
-			// 	System.out.print(m.name+", ");
-			// }
-			// System.out.println("");
-
-			ArrayList<Item> superTransaction = new ArrayList<Item>();	//will replace transaction as set of supersets
+			LinkedList<Item> superTransaction = new LinkedList<Item>();	//will replace transaction as set of supersets
 
 			//get every combo of sub-transactions and build set of super transactions
-			for (int i = 0; i < transaction.size() - 1; i++) {	//item A
-				Item a = transaction.get(i);
-				//System.out.println("Transaction a"+a.name);
+			while(transaction.size() > 1){
+				Item a = transaction.pollFirst();
 				if (frequentSmalls.contains(a) == false){	//skip if a is not a frequent subset
-					//System.out.println("skipping because "+a.name+" is not in frequent smalls");
+					System.out.println("\ta failed");
 					continue;
 				}
-				for (int j = i + 1; j < transaction.size(); j++){
-					Item b = transaction.get(j);
+
+				Iterator<Item> it = transaction.iterator();
+				while(it.hasNext()){
+					Item b = it.next();
 					if (frequentSmalls.contains(b) == false){	//skip if b is not a frequent item
-						//System.out.println("skipping because "+b.name+" is not in frequent smalls");
+						it.remove();
+						System.out.println("\t\tb failed");
 						continue;
 					}
 					Item n = a.combine(b);
 					if (n == null){
-						//System.out.println("Failed combination of "+a.name+" and "+b.name);
+						System.out.println("failed merge");
 						break;	//no need to continue looking at things that begin with a
 					}else{
-						//System.out.println("Successful combination of "+a.name+" and "+b.name+"\n\t"+n.name);
-						//Got a new valid superset. add to frequency and to doubletransactions
+						System.out.println("successful merge");
 						superTransaction.add(n);			//save superset in transaction
 						int count = 1;
 						if (superCounts.containsKey(n)){
@@ -216,12 +213,12 @@ public class jakefim{
 
 	//Load Data
 	static void loadData(String filename){
-		data = new LinkedList<ArrayList<Item>>();
+		data = new LinkedList<LinkedList<Item>>();
 		try{
 			Scanner scan = new Scanner(new File(filename));
 			//for (int i = 0; i < 5; i++) {
 			while (scan.hasNext()){
-				ArrayList<Item> nextLine = new ArrayList<Item>();
+				LinkedList<Item> nextLine = new LinkedList<Item>();
 				String[] line = scan.nextLine().split(" ");
 				for (String word: line){
 					Item item = new Item();
@@ -245,24 +242,7 @@ public class jakefim{
 		try{
 			BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
 
-			for (int i = 0; i < frequents.size();i++) {	//for each length
-				HashSet<Item> frequent = frequents.get(i);
-				HashMap<Item, Integer> counts = frequency.get(i);
-				
-				Iterator<Item> it = frequent.iterator();
-	     		while(it.hasNext()){
-	     			Item item = it.next();
-	     			item.count = counts.get(item);
-	     			String s = item.name+" ("+item.count+")";
-	     			writer.write(s+"\n");
-				}
-			}
-
-			// //Sorted Output
-			// List<Item> output = new LinkedList<Item>();
-
-
-			// for (int i = 0; i < frequents.size();i++) {
+			// for (int i = 0; i < frequents.size();i++) {	//for each length
 			// 	HashSet<Item> frequent = frequents.get(i);
 			// 	HashMap<Item, Integer> counts = frequency.get(i);
 				
@@ -270,16 +250,41 @@ public class jakefim{
 	  //    		while(it.hasNext()){
 	  //    			Item item = it.next();
 	  //    			item.count = counts.get(item);
-	  //    			output.add(item);
+	  //    			String s = item.name+" ("+item.count+")";
+	  //    			writer.write(s+"\n");
 			// 	}
 			// }
 
-			//  java.util.Collections.sort(output);
+			// //Sorted Output
+			List<List<Integer>> output = new LinkedList<List<Integer>>();
 
-			//  for (Item item: output){
-	  //    			String s = item.name+" ("+item.count+")";
-			//  		writer.write(s+"\n");
-			//  }
+			//build list of numberlists for each superset
+			for (int i = 0; i < frequents.size();i++) {
+				HashSet<Item> frequent = frequents.get(i);
+				HashMap<Item, Integer> counts = frequency.get(i);
+				
+				Iterator<Item> it = frequent.iterator();
+	     		while(it.hasNext()){
+	     			Item item = it.next();
+	     			int count = counts.get(item);
+	     			List<Integer> numlist = new LinkedList<Integer>();
+	     			String[] nums = item.name.split(" ");
+	     			for (String num: nums){
+	     				numlist.add(Integer.parseInt(num));
+	     			}
+	     			numlist.add(count);
+	     			output.add(numlist);
+				}
+			}
+
+			Collections.sort(output, new ListComparator<Integer>());
+
+			 for (List<Integer> numlist: output){
+     			for (int i = 0; i < numlist.size()-1; i++) {
+     				writer.write(numlist.get(i) + " ");
+     			}
+		 		writer.write("("+numlist.get(numlist.size()-1)+")\n");
+			 }
 
 			writer.close();
 		}catch (IOException e){
@@ -343,4 +348,16 @@ class Item implements Comparable<Item>{
 
 }
 
+class ListComparator<T extends Comparable<T>> implements Comparator<List<T>>{
+	@Override
+	public int compare(List<T> o1, List<T> o2) {
+    	for (int i = 0; i < Math.min(o1.size(), o2.size()) - 1; i++) {
+    		int c = o1.get(i).compareTo(o2.get(i));
+    		if (c != 0) {
+     			return c;
+    		}
+    	}
+    	return Integer.compare(o1.size(), o2.size());
+	}
+}
 
