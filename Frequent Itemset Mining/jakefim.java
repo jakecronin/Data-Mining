@@ -74,9 +74,8 @@ public class jakefim{
 				if (singleItems.containsKey(item.name)){
 					Item original = singleItems.get(item.name);
 					original.count = original.count + 1;	//increment count of repeat items
-					singleItems.put(original.name, original);
 					if (original.count == minCount){
-						frequentItems.put(item.name, item);
+						frequentItems.put(original.name, original);
 					}
 				}else{
 					singleItems.put(item.name, item);	//add item into list
