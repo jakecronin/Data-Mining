@@ -1,3 +1,5 @@
+//THIS CODE IS MY OWN WORK AND WAS DONE WITHOUT CONSULTING A TUTOR OR CODE WRITTEN BY OTHER STUDENTS
+// - JAKE CRONIN 
 
 import java.io.*;
 import java.util.*;
@@ -51,7 +53,7 @@ public class jakefim{
 		writeData(tofile);
 
 		for (int i = 0; i < times.size(); i++) {
-			System.out.println("Size "+(i+1)+" time: "+times.get(i));
+			System.out.println("Layer "+(i+1)+" time: "+times.get(i));
 		}
 
 		long duration = System.currentTimeMillis() - start;
@@ -79,12 +81,12 @@ public class jakefim{
 				}else{
 					singleItems.put(item, 1);
 				}
-				if (count >= minCount){
+				if (count == minCount){
 					frequent.add(item);
 				}
 			}
 		}
-		frequency.add(singleItems);
+		frequency.add(singleItems);	//FIXME: Only retain item counts that are frequent to save space
 		frequents.add(frequent);
 
 		singleTime = System.currentTimeMillis() - startTime;
@@ -132,7 +134,7 @@ public class jakefim{
 						}else{
 							doubleItems.put(n, 1);
 						}
-						if (count >= minCount){
+						if (count == minCount){
 							frequentDoubles.add(n);		//save name of this frequent set
 						}
 					}
@@ -168,7 +170,7 @@ public class jakefim{
 			while(transaction.size() > 1){
 				Item a = transaction.pollFirst();
 				if (frequentSmalls.contains(a) == false){	//skip if a is not a frequent subset
-					System.out.println("\ta failed");
+					//System.out.println("\ta failed");
 					continue;
 				}
 
@@ -177,15 +179,15 @@ public class jakefim{
 					Item b = it.next();
 					if (frequentSmalls.contains(b) == false){	//skip if b is not a frequent item
 						it.remove();
-						System.out.println("\t\tb failed");
+						//System.out.println("\t\tb failed");
 						continue;
 					}
 					Item n = a.combine(b);
 					if (n == null){
-						System.out.println("failed merge");
+						//System.out.println("failed merge");
 						break;	//no need to continue looking at things that begin with a
 					}else{
-						System.out.println("successful merge");
+						//System.out.println("successful merge");
 						superTransaction.add(n);			//save superset in transaction
 						int count = 1;
 						if (superCounts.containsKey(n)){
@@ -194,7 +196,7 @@ public class jakefim{
 						}else{
 							superCounts.put(n, 1);
 						}
-						if (count >= minCount){
+						if (count == minCount){
 							frequentSupers.add(n);		//save name of this frequent set
 						}
 					}
