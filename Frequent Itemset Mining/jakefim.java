@@ -8,8 +8,7 @@ public class jakefim{
 
 	static LinkedList<LinkedList<Item>> data;	//Transactions<Items Per Transaction>
 
-	static ArrayList<HashMap<Item, Integer>> frequency;	//records frequency of each item
-	static ArrayList<HashSet<Item>> frequents;	//holds all frequent items
+	static ArrayList<HashMap<String, Item>> frequents;	//holds all frequent items
 
 	static int minCount = 1;
 
@@ -32,8 +31,7 @@ public class jakefim{
 		}
 
 		//Init Stuff
-		frequency = new ArrayList<HashMap<Item, Integer>>();	//holds count of each visited set
-		frequents = new ArrayList<HashSet<Item>>();				//holds names of frequent sets
+		frequents = new ArrayList<HashMap<String, Item>>();				//holds names of frequent sets
 		minCount = Integer.parseInt(args[1]);					//minimum support threshold
 		times = new ArrayList<Long>();							//time breakdown of various functions
 
@@ -66,62 +64,58 @@ public class jakefim{
 	static void countSingleItems(){   //count occurances for size 1's into a hashmap
 		long startTime = System.currentTimeMillis();
 
-		HashMap<Item,Integer> singleItems = new HashMap<Item, Integer>();	//remember unique items
-		HashSet<Item> frequent = new HashSet<Item>();	//remember items that pass min threshold
+		HashMap<String, Item> singleItems = new HashMap<String, Item>();	//remember unique items, trashed after each iteration
+		HashMap<String, Item> frequentItems = new HashMap<String, Item>();	//remember items that pass min threshold
 
 		int c = 0;
-		int size = data.size();
-		for (int p = 0; p < size; p++){
-			LinkedList<Item> transaction = data.pollFirst();
+		for (LinkedList<Item> transaction: data){	//for each transaction
 		
-			while(transaction.size() > 1){
-				Item item = transaction.pollFirst();
-			}
-			for (Item item: transaction){
-				int count = 1;
-				if (singleItems.containsKey(item)){
-					count = singleItems.get(item) + 1;
-					singleItems.put(item, count);	//increment count
+			for (Item item: transaction){ 	//for each item in the transaction
+				if (singleItems.containsKey(item.name)){
+					Item original = singleItems.get(item.name);
+					original.count = original.count + 1;	//increment count of repeat items
+					singleItems.put(original.name, original);
+					if (original.count == minCount){
+						frequentItems.put(item.name, item);
+					}
 				}else{
-					singleItems.put(item, 1);
-				}
-				if (count == minCount){
-					frequent.add(item);
+					singleItems.put(item.name, item);	//add item into list
+					if (minCount == 1){
+						frequentItems.put(item.name, item);
+					}
 				}
 			}
 		}
-		frequency.add(singleItems);	//FIXME: Only retain item counts that are frequent to save space
-		frequents.add(frequent);
+		frequents.add(frequentItems);	//save frequent items
 
 		singleTime = System.currentTimeMillis() - startTime;
-		times.add(singleTime);
+		times.add(singleTime);	//record time
 	}
 
 	static void countDoubleItems(){
 		long startTime = System.currentTimeMillis();
 
-		HashMap<Item, Integer> doubleItems = new HashMap<Item, Integer>();	//save count of double items
-		HashSet<Item> frequentDoubles = new HashSet<Item>();	//save names of frequent items
+		HashMap<String, Item> doubleItems = new HashMap<String, Item>();	//save count of double items
+		HashMap<String, Item> frequentDoubles = new HashMap<String, Item>();	//save names of frequent items
 
-		HashSet<Item> frequentSingles = frequents.get(0);
+		HashMap<String, Item> frequentSingles = frequents.get(0);	//reference frequent itemsets of size 1
 
 		int size = data.size();
-		for (int p = 0; p < size; p++){
-			//System.out.println(times.size()+": "+p+"/"+linecount);
+		for (int p = 0; p < size; p++){	//for each transaction
 			LinkedList<Item> transaction = data.pollFirst();	//single items in transaction
-			LinkedList<Item> doubleTransaction = new LinkedList<Item>();	//will replace transaction
+			LinkedList<Item> doubleTransaction = new LinkedList<Item>();	//condensed transaction
 
 			//get every combo of sub-transactions and build set of 2-sized ones
 			while(transaction.size() > 1){
 				Item a = transaction.pollFirst();
-				if (frequentSingles.contains(a) == false){	//skip if a is not a frequent item
+				if (frequentSingles.containsKey(a.name) == false){	//skip if a is not a frequent item
 					continue;
 				}
-				//run through the rest of the items with an interator
+				//go through all combos of item a with other items in this transaction
 				Iterator<Item> it = transaction.iterator();
 				while(it.hasNext()){
 					Item b = it.next();
-					if (frequentSingles.contains(b) == false){	//skip if b is not a frequent item
+					if (frequentSingles.containsKey(b.name) == false){	//skip if b is not a frequent item
 						it.remove();	//remove item from transaction if it isn't frequent
 						continue;
 					}
@@ -131,25 +125,26 @@ public class jakefim{
 					}else{
 						//Got a new valid superset. add to frequency and to doubletransactions
 						doubleTransaction.add(n);			//save superset in transaction
-						int count = 1;
-						if (doubleItems.containsKey(n)){
-							count = doubleItems.get(n) + 1;
-							doubleItems.put(n, count);	//save set count
+						if (doubleItems.containsKey(n.name)){
+							Item original = doubleItems.get(n.name);
+							original.count = original.count + 1;
+							if (original.count == minCount){
+								frequentDoubles.put(original.name, original);	//save item as frequent
+							}
 						}else{
-							doubleItems.put(n, 1);
-						}
-						if (count == minCount){
-							frequentDoubles.add(n);		//save name of this frequent set
+							doubleItems.put(n.name, n);
+							if (minCount == 1){
+								frequentDoubles.put(n.name, n);
+							}
 						}
 					}
 				}
 			}
 			if (doubleTransaction.isEmpty() == false){
-				data.addLast(doubleTransaction);
+				data.addLast(doubleTransaction);	//put non-empty transactions back for future combining
 			}
 		}
 
-		frequency.add(doubleItems);
 		frequents.add(frequentDoubles);
 
 		doubleTime = System.currentTimeMillis() - startTime;
@@ -159,49 +154,46 @@ public class jakefim{
 	static void countNextSize(){
 		long startTime = System.currentTimeMillis();
 
-		HashMap<Item, Integer> superCounts = new HashMap<Item, Integer>();	//save count of supersets
-		HashSet<Item> frequentSupers = new HashSet<Item>();	//save names of frequent supersets
+		HashMap<String, Item> superCounts = new HashMap<String, Item>();	//save count of supersets
+		HashMap<String, Item> frequentSupers = new HashMap<String, Item>();	//save names of frequent supersets
 		
-		HashSet<Item> frequentSmalls = frequents.get(frequents.size()-1);	//remember which subsets are frequent
+		HashMap<String, Item> frequentSmalls = frequents.get(frequents.size()-1);	//remember which subsets are frequent
 
 		linecount = data.size();
 		for (int p = 0; p < linecount; p++){	//run through each transaction
 			LinkedList<Item> transaction = data.removeFirst();	//subsets in transaction
-
 			LinkedList<Item> superTransaction = new LinkedList<Item>();	//will replace transaction as set of supersets
 
 			//get every combo of sub-transactions and build set of super transactions
 			while(transaction.size() > 1){
 				Item a = transaction.pollFirst();
-				if (frequentSmalls.contains(a) == false){	//skip if a is not a frequent subset
-					//System.out.println("\ta failed");
+				if (frequentSmalls.containsKey(a.name) == false){	//skip if a is not a frequent subset
 					continue;
 				}
 
 				Iterator<Item> it = transaction.iterator();
 				while(it.hasNext()){
 					Item b = it.next();
-					if (frequentSmalls.contains(b) == false){	//skip if b is not a frequent item
+					if (frequentSmalls.containsKey(b.name) == false){	//skip if b is not a frequent item
 						it.remove();
-						//System.out.println("\t\tb failed");
 						continue;
 					}
 					Item n = a.combine(b);
 					if (n == null){
-						//System.out.println("failed merge");
 						break;	//no need to continue looking at things that begin with a
 					}else{
-						//System.out.println("successful merge");
 						superTransaction.add(n);			//save superset in transaction
-						int count = 1;
-						if (superCounts.containsKey(n)){
-							count = superCounts.get(n) + 1;
-							superCounts.put(n, count);	//save set count
+						if (superCounts.containsKey(n.name)){
+							Item original = superCounts.get(n.name);
+							original.count = original.count + 1;
+							if (original.count == minCount){
+								frequentSupers.put(original.name, original);
+							}
 						}else{
-							superCounts.put(n, 1);
-						}
-						if (count == minCount){
-							frequentSupers.add(n);		//save name of this frequent set
+							superCounts.put(n.name, n);
+							if (minCount == 1){
+								frequentSupers.put(n.name, n);
+							}
 						}
 					}
 				}
@@ -211,7 +203,6 @@ public class jakefim{
 			}
 		}
 
-		frequency.add(superCounts);
 		frequents.add(frequentSupers);
 
 		times.add(System.currentTimeMillis() - startTime);
@@ -222,7 +213,6 @@ public class jakefim{
 		data = new LinkedList<LinkedList<Item>>();
 		try{
 			Scanner scan = new Scanner(new File(filename));
-			//for (int i = 0; i < 5; i++) {
 			while (scan.hasNext()){
 				LinkedList<Item> nextLine = new LinkedList<Item>();
 				String[] line = scan.nextLine().split(" ");
@@ -232,9 +222,7 @@ public class jakefim{
 					item.last = word;
 					item.prefix = null;
 					nextLine.add(item);
-				//	System.out.print(word+" ");
 				}
-				//System.out.print("\n");
 				data.add(nextLine);
 				linecount = linecount + 1;
 			}
@@ -249,13 +237,10 @@ public class jakefim{
 			BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
 
 			// for (int i = 0; i < frequents.size();i++) {	//for each length
-			// 	HashSet<Item> frequent = frequents.get(i);
-			// 	HashMap<Item, Integer> counts = frequency.get(i);
-				
+			// 	HashSet<Item> frequent = frequents.get(i);				
 			// 	Iterator<Item> it = frequent.iterator();
 	  //    		while(it.hasNext()){
 	  //    			Item item = it.next();
-	  //    			item.count = counts.get(item);
 	  //    			String s = item.name+" ("+item.count+")";
 	  //    			writer.write(s+"\n");
 			// 	}
@@ -266,19 +251,17 @@ public class jakefim{
 
 			//build list of numberlists for each superset
 			for (int i = 0; i < frequents.size();i++) {
-				HashSet<Item> frequent = frequents.get(i);
-				HashMap<Item, Integer> counts = frequency.get(i);
+				HashMap<String, Item> frequent = frequents.get(i);
 				
-				Iterator<Item> it = frequent.iterator();
+				Iterator<Item> it = frequent.values().iterator();
 	     		while(it.hasNext()){
 	     			Item item = it.next();
-	     			int count = counts.get(item);
 	     			List<Integer> numlist = new LinkedList<Integer>();
 	     			String[] nums = item.name.split(" ");
 	     			for (String num: nums){
 	     				numlist.add(Integer.parseInt(num));
 	     			}
-	     			numlist.add(count);
+	     			numlist.add(item.count);
 	     			output.add(numlist);
 				}
 			}
@@ -309,7 +292,7 @@ class Item implements Comparable<Item>{
 
 	int[] values;
 
-	int count = 1;	//increments when data is folded
+	int count;	//increments when data is folded
 
 	@Override
     public boolean equals(Object obj){
@@ -335,7 +318,7 @@ class Item implements Comparable<Item>{
     }
 
     Item(){
-    	//
+    	this.count = 1;
     }
 
     Item combine(Item item){	//prefixes must be the same, and my 'last' must be before than theirs
