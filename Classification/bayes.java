@@ -98,15 +98,17 @@ public class bayes{
 }
 
 class Probabilities{
+	int size = 0;
 	HashMap<Character, DataClass> classes;
 
 	public Probabilities(ArrayList<ArrayList<Character>> data){
+		size = data.size();
 		classes = new HashMap<Character, DataClass>();
 		for (ArrayList<Character> row: data){
 			Character classChar = row.get(0);
 			DataClass d = classes.get(classChar);
 			if (d==null){
-				d = new DataClass(row.size(),classChar);
+				d = new DataClass(row.size(),classChar,size);
 				classes.put(classChar,d);
 			}
 			d.addRow(row);
@@ -115,18 +117,17 @@ class Probabilities{
 	public Character guess(ArrayList<Character> row){
 		double maxProb = 0;
 		Character bestGuess = '\n';
-		System.out.print("Guessing on ");
-		for (Character c: row){
-			System.out.print(c + " ");
-		}
 		for (DataClass d: classes.values()){
 			double prob = d.getProbability(row);
-			System.out.println("P("+d.name+"): "+prob);
 			if (prob > maxProb){
 				maxProb = prob;
 				bestGuess = d.name;
 			}
 		}
+		if (bestGuess != row.get(0)){
+			System.out.println("Guessed "+bestGuess+" for class "+row.get(0));
+		}
+
 		return bestGuess;
 	}
 	public void print(){
@@ -137,9 +138,11 @@ class Probabilities{
 }
 class DataClass{
 	Character name;
+	int superSize = 0;
 	ArrayList<HashMap<Character,Integer>> attributes;
-	public DataClass(int numAttributes, Character name){
+	public DataClass(int numAttributes, Character name, int superSize){
 		this.name = name;
+		this.superSize = superSize;
 		attributes = new ArrayList<HashMap<Character,Integer>>();
 		for (int i=0;i<numAttributes;i++) {
 			attributes.add(new HashMap<Character,Integer>());
@@ -158,21 +161,21 @@ class DataClass{
 		}
 	}
 	public double getProbability(ArrayList<Character> row){
-		double probability = 0;
-		double p;
+		double probability = (double) classSize() / (double) superSize;
+		if ( probability == 0) return 0;
 		for (int i=1;i<row.size();i++) {
 			Character attrValue = row.get(i);
-			Integer totalSize = attributes.get(0).get(name);
-			Integer smallSize = attributes.get(i).get(attrValue);
-			if (totalSize==null) return 0;
-			if (smallSize==null) smallSize = 1;
-			else smallSize++;
-			p = (double)smallSize / (double)totalSize;
-			if (probability == 0) probability = p;
-			else probability *= p;
+			Integer classAttrSize = attributes.get(i).get(attrValue);
+			if (classAttrSize==null) classAttrSize = 1;
+			else classAttrSize++;
+
+			probability *= (double)classAttrSize / (double)classSize();
 			//System.out.println("Total Size "+totalSize+" and small size "+smallSize+" p: "+p+" prob"+probability);
 		}
 		return probability;
+	}
+	public int classSize(){
+		return attributes.get(0).get(name);
 	}
 	public void print(){
 		System.out.println("Class "+name+":");
