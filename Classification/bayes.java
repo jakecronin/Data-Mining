@@ -46,7 +46,7 @@ public class bayes{
 
 		//3) Train Model
 		probabilities = new Probabilities(data);
-		probabilities.print();
+		if(verbose) probabilities.print();
 
 		//4) Test Input
 		testData = loadData(testFile);
@@ -65,9 +65,9 @@ public class bayes{
 			if (guessNoLap.equals(classChar)) correctNoLap++;
 			else if (verbose) probabilities.guess(row,true,false);
 		}
-		double accuracyLap = (double) correctLap / testData.size();
-		double accuracyNoLap = (double) correctNoLap / testData.size();
-		System.out.println("Accuracy with Laplacian correction: "+accuracyLap+"\tWithout:"+accuracyNoLap);
+		double accuracyLap = (double) correctLap / testData.size() * 100;
+		double accuracyNoLap = (double) correctNoLap / testData.size() * 100;
+		System.out.println("Accuracy with Laplacian correction: "+accuracyLap+"%\tWithout:"+accuracyNoLap+"%");
 		System.out.println("Writing results "+(accuracyLap>accuracyNoLap?"without laplacian correction.":"with laplacian correction."));
 
 		//5) Write Output. Use whichever method had better accuracy

@@ -73,11 +73,9 @@ public class c45{
 		}
 
 		//2) Recursively Build Tree
-		System.out.println("building tree");
 		tree = buildTree(rows, attributes);
-		printTree(tree);
+		//printTree(tree);
 
-		System.out.println("finished building tree");
 
 		//3) Test Tree
 		testdata = loadData(testFile);
@@ -88,19 +86,19 @@ public class c45{
 			Character actual = row.get(0);
 			Character guess = guess(row, tree);
 			correctClasses.add(guess);
-			System.out.println("guess: "+guess+" actual: "+actual);
+			//System.out.println("guess: "+guess+" actual: "+actual);
 			if (guess == actual){
 				correct++;
 			}
 		}
+		long duration = System.currentTimeMillis() - start;
 		double performance = (double)correct / (double)testdata.size();
-		System.out.println("performance: "+performance+" ("+correct+"/"+testdata.size()+")");
+		System.out.println("Decision Tree Accuracy: "+performance*100+" ("+correct+"/"+testdata.size()+")\nTime Elapsed (ms): "+duration);
 
 		//4) Write Results
 		try{
 			BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
-			long duration = System.currentTimeMillis() - start;
-			writer.write("Decision Tree Accuracy: "+performance+"\nTime Elapsed (ms): "+duration+"\nClass Guessse:\t\n");
+			writer.write("Decision Tree Accuracy: "+performance*100+" ("+correct+"/"+testdata.size()+")\nTime Elapsed (ms): "+duration+"\nClass Guessse:\t\n");
 
 			for(Character c: correctClasses){
 				writer.write(c + " ");
