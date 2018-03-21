@@ -74,7 +74,7 @@ public class c45{
 
 		//2) Recursively Build Tree
 		tree = buildTree(rows, attributes);
-		//printTree(tree);
+		printTree(tree);
 
 
 		//3) Test Tree
@@ -127,14 +127,19 @@ public class c45{
 		for (int i = 0; i<attr.size(); i++) {
 			attributes.add(attr.get(i));
 		}
+		System.out.print("\nPositive Gain Ratios (attr, ratio): ");
 		for (int i = 1;i < attributes.size(); i++) {
 			if (!attributes.get(i)){ continue; } //skip attributes that have already been used
 			double gainRatio = calcGainRatio(rows, i);
+			if (gainRatio > 0){
+				System.out.print(" ("+i + ", "+gainRatio+")");
+			}
 			if (gainRatio > maxGainRatio){
 				maxGainRatio = gainRatio;
 				maxAttribute = i;
 			}
 		}
+		System.out.print(" max is: "+maxAttribute);
 		if (maxGainRatio == 0){
 			return new Tree(rows, data);
 		}
@@ -159,6 +164,8 @@ public class c45{
 
 		LinkedList<Tree> stack = new LinkedList<Tree>();
 		stack.add(tree);
+
+		System.out.println("Tree: [attribute, #children] or [#values in leaf]");
 
 		while(stack.size() > 0){
 			//go through stack and print
