@@ -1,0 +1,4 @@
+Decision Tree Accuracy: 68.48484848484848 (113/165)
+Time Elapsed (ms): 35
+Class Guessse:	
+j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j j 
