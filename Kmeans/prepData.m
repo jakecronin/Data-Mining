@@ -1,4 +1,6 @@
-loadDataScript;
+
+
+disp('Cleaning IMDB Data')
 
 %columns of interest:
 titles = ['budget' 'popularity' 'revenue' 'runtime' 'vote_average' 'vote_count'];
@@ -21,7 +23,7 @@ end
 %remove rows with NaN data
 X(any(isnan(X),2),:) = [];
 
-%noralize data from -1 to 1
+%noralize data from 0 to 1
 minVals = min(X);
 maxVals = max(X);
 diffs = maxVals - minVals;

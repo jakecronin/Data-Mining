@@ -1,0 +1,11 @@
+
+
+[ids,centers,squareError,errors] = jakeKMeans(X,10,true,true);
+disp('did first')
+
+
+errorsOverIterations = runJakeKMeans('irisdata.dat',
+
+
+disp(size(errors));
+

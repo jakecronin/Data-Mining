@@ -40,6 +40,9 @@ if plotClusters
     pcenters(i,:,:) = centers;
 end
 
+figure(1) %Figure to hold moving centers
+hold on;
+
 
 %% Iterate Re-Centering Clusters and Re-Assigning Data Points
 changed = 1;
@@ -66,33 +69,30 @@ while changed
         pcenters(i,:,:) = centers;
     end
     
-    if plotCenters
-        centerfig = figure('NumberTitle', 'off', 'Name', 'Movement of Cluster Centroids');
-        view(3)
-        hold on;
-        if changed
-            plot3(centers(:,1),centers(:,2),centers(:,3),'bx','MarkerSize',10,'LineWidth',2)
-        else
-            plot3(centers(:,1),centers(:,2),centers(:,3),'kx','MarkerSize',15,'LineWidth',3)
-        end
+    if changed && plotCenters
+        plot(centers(:,1),centers(:,2),'bx','MarkerSize',10,'LineWidth',2)
+    else
+        plot(centers(:,1),centers(:,2),'kx','MarkerSize',15,'LineWidth',3)
     end
+end
 
 squareError = sum(dists.^2);
 
 %% Plot Errors over iterations if Requested
 if plotClusters
-    clusterfig = figure('NumberTitle', 'off', 'Name', 'Cluster Assignments');
-    view(3)
     iters = i;
+    figure('NumberTitle', 'off', 'Name', 'Errors over Iterations');
+
     hold on;
     for j = 1:iters % Plot each iteration
         subplot(round(sqrt(iters))+1,round(sqrt(iters))+1,j);
-        view(3);
         hold on;
         for c = 1:k %Plot each cluster
-            ids = pids(:,j); %Point assignments for this cluster
-            plot3(data(ids==c,1), data(ids==c,2), data(ids==c,3),'.','MarkerSize',12)
-            plot3(pcenters(j,:,1),pcenters(j,:,2),pcenters(j,:,3),'kx','MarkerSize',15,'LineWidth',3)
+            identities = pids(:,j); %Point assignments for this cluster
+            x = data(identities==c,1);  %Ponits on cluster c
+            y = data(identities==c,2);
+            plot(x,y,'.','MarkerSize',12)
+            plot(pcenters(j,:,1),pcenters(j,:,2),'kx','MarkerSize',15,'LineWidth',3)
         end
     end 
     hold off; 
