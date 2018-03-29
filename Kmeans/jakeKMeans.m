@@ -1,3 +1,5 @@
+%THIS CODE IS MY OWN WORK AND WAS DONE WITHOUT CONSULTING A TUTOR OR CODE WRITTEN BY OTHER STUDENTS
+% - JAKE CRONIN 
 function [ ids, centers, squareError, errors ] = jakeKMeans(data,k,plotClusters,plotCenters)
 %jakeKMeans takes 2 dimensional array (rows X attributes) of data and the number of clusters, k, and
 %assigns each row of data to a cluster in the ids matrix. The centers of
@@ -40,13 +42,15 @@ if plotClusters
     pcenters(i,:,:) = centers;
 end
 
+ if plotCenters
+    centerfig = figure('NumberTitle', 'off', 'Name', 'Movement of Cluster Centroids');
+ end
 
 %% Iterate Re-Centering Clusters and Re-Assigning Data Points
 changed = 1;
 while changed
     i = i+1;
  
-    
     %Move each center to the geometric center of their cluster
     for c = 1:k %Get center of point cloud for each cluster
        centers(c,1) = mean(data(ids==c));
@@ -55,10 +59,9 @@ while changed
     %Calcualate new distances and re-assign clusters
     oldids = ids; %store old cluster ids
     [dists, ids] = pdist2(centers,data, 'cityblock','Smallest',1);
-    
+    dists(isnan(dists))=0;
     %see if anything has changed
     changed = ~(isequal(oldids, ids)); %see if any ids have changed
-    
     errors(i) = sum(dists.^2);
     
     if plotClusters %Save ids and centers if requested
@@ -67,7 +70,7 @@ while changed
     end
     
     if plotCenters
-        centerfig = figure('NumberTitle', 'off', 'Name', 'Movement of Cluster Centroids');
+        centerfig;
         view(3)
         hold on;
         if changed
@@ -76,7 +79,7 @@ while changed
             plot3(centers(:,1),centers(:,2),centers(:,3),'kx','MarkerSize',15,'LineWidth',3)
         end
     end
-
+end
 squareError = sum(dists.^2);
 
 %% Plot Errors over iterations if Requested

@@ -1,3 +1,6 @@
+%THIS CODE IS MY OWN WORK AND WAS DONE WITHOUT CONSULTING A TUTOR OR CODE WRITTEN BY OTHER STUDENTS
+% - JAKE CRONIN 
+
 disp('Going to analyze IMDB data')
 
 maxClusters = 10;
@@ -6,7 +9,7 @@ jerrors = zeros(maxClusters,1);
 
 ds = zeros(maxClusters,1);
 
-clustersFig = figure()
+clustersFig = figure();
 %Calculate SSE for clustering 1-10
 for k = 1:maxClusters
     %run kmeans, track sse as # of clusters increases

@@ -1,4 +1,5 @@
-
+%THIS CODE IS MY OWN WORK AND WAS DONE WITHOUT CONSULTING A TUTOR OR CODE WRITTEN BY OTHER STUDENTS
+% - JAKE CRONIN 
 
 disp('Cleaning IMDB Data')
 
@@ -28,6 +29,7 @@ minVals = min(X);
 maxVals = max(X);
 diffs = maxVals - minVals;
 X = (X - minVals) ./ diffs;
+X(isnan(X))=0;
 
 
 
